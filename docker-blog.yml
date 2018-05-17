@@ -1,0 +1,20 @@
+version: '2'
+
+services:
+
+### blog           ########################
+    ghost:
+        build: ./ghost
+        volumes:
+            - /data/www/blog/content/themes:/usr/src/ghost/content/themes
+        ports:
+            - "8080:80"
+        command: "sh /usr/src/ghost/ghost.sh"
+        restart: always
+        cpu_shares: 50
+        
+        
+
+
+### Add more Containers below ###############################
+

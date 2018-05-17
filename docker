@@ -1,0 +1,1 @@
+DOCKER_OPTS="$DOCKER_OPTS --registry-mirror=https://0umi81k8.mirror.aliyuncs.com"

@@ -1,0 +1,55 @@
+version: '2'
+
+services:
+
+    ghost: 
+        build: ./ghost
+        #image: ghost:latest
+        links: 
+            - db:mysql 
+        ports:
+            - "2368:2368"
+        volumes_from:
+            - ghost_data
+        environment:
+            - GHOST_ROOT_URL=http://www.bddb.net
+
+
+        cpu_shares: 50
+        command: /bin/sh -c "while true; do sleep 10; done"
+    
+        restart: always 
+
+
+
+    db: 
+        image: mysql:8.0.0 
+        ports:
+            - "3307:3306"
+        expose: 
+            - "3306"
+        environment: 
+            - MYSQL_ROOT_PASSWORD=ga107addh3d
+            - MYSQL_DATABASE=ghost
+            - MYSQL_USER=ghost
+            - MYSQL_PASSWORD=62d8f9a107a
+        volumes_from:
+            - db_data
+        restart: always
+
+    ghost_data:
+        image: centos:latest
+        volumes:
+            - /docker/ghost/data:/data
+            - /docker/ghost/content/images:/usr/src/ghost/content/images
+            - /docker/ghost/themes:/usr/src/ghost/content/themes
+        command: /bin/sh -c "while true; do sleep 10; done"
+        restart: always
+
+    db_data:
+        image: centos:latest
+        volumes:
+            - /docker/mysql:/var/lib/mysql
+            - /docker/ghost/sql:/tmp/sql
+        command: /bin/sh -c "while true; do sleep 10; done"
+        restart: always

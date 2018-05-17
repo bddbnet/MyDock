@@ -1,0 +1,28 @@
+version: '2'
+
+services:
+
+
+    db: 
+        build: ./mysql
+        ports:
+            - "3406:3306"
+        expose: 
+            - "3306"
+        environment: 
+            - MYSQL_ROOT_PASSWORD=ga107addh3d
+            - MYSQL_DATABASE=py1
+            - MYSQL_USER=py1
+            - MYSQL_PASSWORD=62d8f9a107a
+        volumes_from:
+            - db_data
+        restart: always
+
+
+    db_data:
+        image: daocloud.io/library/centos:latest
+        volumes:
+            - /docker/mysql:/var/lib/mysql
+            - /docker/py1/sql:/tmp/sql
+        command: /bin/sh -c "while true; do sleep 10; done"
+        restart: always

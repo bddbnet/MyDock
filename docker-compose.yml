@@ -1,0 +1,152 @@
+version: '2'
+
+services:
+
+### Workspace Utilities Container ###########################
+
+    workspace:
+        build:
+            context: ./workspace
+            args:
+                - INSTALL_NODE=true
+                - COMPOSER_GLOBAL_INSTALL=true
+                - PUID=1000
+                - PGID=1000
+        volumes_from:
+            - volumes_source
+        extra_hosts:
+            # IMPORTANT: Replace with your Docker Host IP (will be appended to /etc/hosts)
+            - "test.com:10.1.5.3"
+        tty: true
+
+### PHP-FPM Container #######################################
+
+    php-fpm:
+        build:
+            context: ./php-fpm
+            args:
+                - INSTALL_ZIP_ARCHIVE=false
+                - INSTALL_MEMCACHED=true
+                - INSTALL_OPCACHE=false
+            dockerfile: Dockerfile-56
+        volumes_from:
+            - volumes_source
+        expose:
+            - "9000"
+        links:
+            - workspace
+        extra_hosts:
+            # IMPORTANT: Replace with your Docker Host IP (will be appended to /etc/hosts)
+            - "test.com:10.1.5.3"
+
+### Nginx Server Container ##################################
+
+    nginx:
+        build:
+            context: ./nginx
+            args:
+                - PHP_UPSTREAM=php-fpm
+        volumes_from:
+            - volumes_source
+        volumes:
+            - ./logs/nginx/:/var/log/nginx
+        ports:
+            - "80:80"
+            - "443:443"
+        links:
+            - php-fpm
+
+### MySQL Container #########################################
+
+    mysql:
+        build: ./mysql
+        volumes:
+            - /data/mysql:/var/lib/mysql
+        ports:
+            - "33061:3306"
+        environment:
+            MYSQL_DATABASE: ghost_db
+            MYSQL_USER: ghost
+            MYSQL_PASSWORD: "b)ox9BKD8QTOvCd"
+            MYSQL_ROOT_PASSWORD: root
+
+### Redis Container #########################################
+
+    redis:
+        build: ./redis
+        volumes_from:
+            - volumes_data
+        ports:
+            - "6379:6379"
+
+### Memcached Container #####################################
+
+    memcached:
+        build: ./memcached
+        volumes_from:
+            - volumes_data
+        ports:
+            - "11211:11211"
+        links:
+            - php-fpm
+
+### Elasticsearch Container #######################################
+
+    elasticsearch:
+        build: ./elasticsearch
+        volumes_from:
+            - volumes_data
+        ports:
+            - "9200:9200"
+            - "9300:9300"
+
+### phpMyAdmin Container ##################################
+
+    phpmyadmin:
+        build: ./phpmyadmin
+        environment:
+            PMA_ARBITRARY: 1
+            MYSQL_USER: homestead
+            MYSQL_PASSWORD: secret
+            MYSQL_ROOT_PASSWORD: root
+        volumes_from:
+            - volumes_data
+        ports:
+            - "8080:80"
+        links:
+            - "mysql:db"
+
+### Blog Server Container ##################################
+
+    ghost:
+        build: ./ghost
+        volumes:
+            - /data/www/blog/content/themes:/usr/src/ghost/content/themes
+        ports:
+            - "8080:80"
+        command: sh /usr/src/ghost/ghost.sh
+        restart: always
+        cpu_shares: 50
+        
+        
+
+### Application Code Container ######################
+
+    volumes_source:
+        image: tianon/true
+        volumes:
+            - ../:/data/www
+
+### Databases Data Container ################################
+
+    volumes_data:
+        image: tianon/true
+        volumes:
+            - ./data/mysql:/var/lib/mysql
+            - ./data/memcached:/var/lib/memcached
+            - ./data/redis:/data
+            - ./data/sessions:/sessions
+            - ./data/elasticsearch/data:/usr/share/elasticsearch/data
+
+### Add more Containers below ###############################
+
